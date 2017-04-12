@@ -43,7 +43,7 @@ class PostUrlForm(forms.ModelForm):
 
 class PostAdmin(admin.ModelAdmin):
 
-    change_list_template = 'admin/post_change_list.html'
+    change_list_template = 'django_facebook_photo_api/admin/post_change_list.html'
 
     list_display = ('application', 'thumb_image', 'get_username', 'caption',
                     'get_hashtags', 'created_at', 'show',)
