@@ -32,10 +32,13 @@ def sync_by_app(request, app_id=None):
 
 def get_posts(request, app_id):
     order_by_param = ('?', 'created_at')
+    result_dict = {}
+    result_dict['from_site'] = 'facebook'
     try:
         app = FacebookApp.objects.get(id=app_id)
     except:
-        return []
+        result_dict['photos'] = None
+        return JsonResponse(result_dict)
 
     #count
     try:
@@ -60,8 +63,6 @@ def get_posts(request, app_id):
         .values('media_id', 'photo', 'link', 'caption', 'photo_height', 
             'photo_width')[:count]
 
-    result_dict = {}
-    result_dict['from_site'] = 'facebook'
     result_dict['photos'] = list(posts)
 
     return JsonResponse(result_dict)
