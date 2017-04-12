@@ -31,7 +31,7 @@ Add it to your `INSTALLED_APPS`:
 
     INSTALLED_APPS = (
         ...
-        'django_facebook_photo_api.apps.DjangoFacebookPhotoApiConfig',
+        'django_facebook_photo_api',
         ...
     )
 
@@ -44,7 +44,8 @@ Add Django Facebook photo api's URL patterns:
 
     urlpatterns = [
         ...
-        url(r'^facebook_app/', include(django_twitter_photo_api_urls)),
+        url(r'^facebook_app/', include(django_facebook_photo_api_urls, 
+            namespace="facebook-feed")),
         ...
     ]
 
