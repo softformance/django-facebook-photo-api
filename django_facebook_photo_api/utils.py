@@ -24,7 +24,7 @@ def get_media_by_code(facebook_id, id_application):
 
 
 def save_post(app_id, feed_post, is_show, hashtag):
-    media_id = feed_post['object_id']
+    media_id = feed_post['id']
     link = feed_post['permalink_url']
     caption = feed_post['message']
     media_url = feed_post['full_picture']
@@ -69,15 +69,14 @@ def get_media_by_url(application, url):
 
 
 def sync_by_tag(app_id, tag, is_show, api):
-    #TODO pagination
     hashtag = '#' + str(tag.name)
     api = api_facebook(app_id)
     for subscription in tag.subscriptions.all():
-        feeds = api.get_connections(id=subscription.facebook_id, connection_name='feed',
-            fields="object_id,id,message,created_time, \
+        feeds = api.get_all_connections(id=subscription.facebook_id, connection_name='feed',
+            fields="id,message,created_time, \
             permalink_url,type,from,full_picture")
-        for feed_post in feeds['data']:
-            if feed_post['type'] == 'photo' and feed_post.get('message') != None and hashtag in feed_post.get('message'):
+        for feed_post in feeds:
+            if feed_post['type'] == 'photo' and feed_post.get('message') != None and hashtag in feed_post.get('message').lower():
                 save_post(app_id, feed_post, is_show, tag)
 
 def api_facebook(app_id):

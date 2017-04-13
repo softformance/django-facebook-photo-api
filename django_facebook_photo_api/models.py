@@ -96,7 +96,6 @@ class Subscription(models.Model):
     type = models.CharField(
         verbose_name=_('Type of subscription'), choices=TYPE_OF_SUBSCRIPTION, max_length=60, 
         blank=True, editable=False)
-    last_viewed_object = models.BigIntegerField(default=0, editable=False)
     
 
     def save(self, *args, **kwargs):
