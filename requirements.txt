@@ -1,2 +1,7 @@
-
+-e git+https://github.com/mobolic/facebook-sdk.git@ea4e43ce5d8f0f9663c6574308d6c712dc52e9ad#egg=facebook_sdk
+django>=1.8
+easy-thumbnails
+Pillow
+requests
+django-celery-beat
 # Additional requirements go here
