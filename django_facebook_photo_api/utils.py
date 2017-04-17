@@ -5,7 +5,7 @@ import facebook
 import urllib.parse as urlparse
 
 from django.core.files.base import ContentFile
-from .models import Post, Hashtag, FacebookApp
+from .models import Post, Hashtag, FacebookApp, Subscription
 from .app_settings import FACEBOOK_API_VERSION
 
 logger = logging.getLogger('default')
@@ -71,12 +71,17 @@ def get_media_by_url(application, url):
 def sync_by_tag(app_id, tag, is_show, api):
     hashtag = '#' + str(tag.name)
     api = api_facebook(app_id)
-    for subscription in tag.subscriptions.all():
+    for subscription in Subscription.objects.all():
         feeds = api.get_all_connections(id=subscription.facebook_id, connection_name='feed',
             fields="id,message,created_time, \
             permalink_url,type,from,full_picture")
-        for feed_post in feeds:
-            if feed_post['type'] == 'photo' and feed_post.get('message') != None and hashtag in feed_post.get('message').lower():
+        for i, feed_post in enumerate(feeds):
+            if subscription.last_synced_post.get(str(tag.name)) == feed_post['id']:
+                break
+            elif i == 0:
+                subscription.last_synced_post[str(tag.name)] = feed_post['id']
+                subscription.save()
+            elif feed_post['type'] == 'photo' and feed_post.get('message') != None and hashtag in feed_post.get('message').lower():
                 save_post(app_id, feed_post, is_show, tag)
 
 def api_facebook(app_id):

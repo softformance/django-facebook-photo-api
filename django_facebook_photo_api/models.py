@@ -5,10 +5,12 @@ from django.db import models
 from django.utils import timezone
 from django.utils.encoding import python_2_unicode_compatible
 from django.utils.translation import ugettext as _
+from django.db.models import signals
 
 from easy_thumbnails.fields import ThumbnailerImageField
-from django_celery_beat.models import PeriodicTask
-from django.core.files.images import get_image_dimensions
+from django_celery_beat.models import PeriodicTask, PeriodicTasks, \
+    IntervalSchedule, CrontabSchedule, SolarSchedule
+from jsonfield import JSONField
 
 
 @python_2_unicode_compatible
@@ -35,11 +37,16 @@ class FacebookApp(models.Model):
 
 
 @python_2_unicode_compatible
+class TaskShedulerFacebook(PeriodicTask):
+    periodic_task = models.ForeignKey(FacebookApp, on_delete=models.SET_NULL, 
+        blank=True, null=True, related_name='periodic_task')
+
+
+@python_2_unicode_compatible
 class Hashtag(models.Model):
     application = models.ForeignKey(
         FacebookApp, related_name='app_hashtag', default=1)
     name = models.CharField(max_length=50, verbose_name=_('Hashtag name'))
-    subscriptions = models.ManyToManyField('Subscription', related_name="hashtags")
 
     class Meta:
         verbose_name = _('Hashtag')
@@ -91,8 +98,9 @@ class Subscription(models.Model):
     )
     application = models.ForeignKey(
         FacebookApp, related_name='app_subscription', default=1)
-    url = models.URLField()
+    url = models.URLField(help_text="Please insert here clear link to Page or Group ")
     facebook_id = models.BigIntegerField(default=0, editable=False)
+    last_synced_post = JSONField(default={}, blank=True, editable=False)
     type = models.CharField(
         verbose_name=_('Type of subscription'), choices=TYPE_OF_SUBSCRIPTION, max_length=60, 
         blank=True, editable=False)
@@ -103,7 +111,7 @@ class Subscription(models.Model):
         api = api_facebook(self.application.id)
         if '/groups/' in self.url:
             app_links_data = api.get_connections(id=str(self.url), 
-    connection_name='app_links', fields='app_links')
+                connection_name='app_links', fields='app_links')
             group_id = app_links_data['app_links']['android'][0]['url'].split('/')[-1]
             self.facebook_id = group_id
             self.type = 'group'
@@ -117,3 +125,19 @@ class Subscription(models.Model):
 
     def __str__(self):
         return self.url
+
+
+signals.pre_delete.connect(PeriodicTasks.changed, sender=TaskShedulerFacebook)
+signals.pre_save.connect(PeriodicTasks.changed, sender=TaskShedulerFacebook)
+signals.pre_delete.connect(
+    PeriodicTasks.update_changed, sender=IntervalSchedule)
+signals.post_save.connect(
+    PeriodicTasks.update_changed, sender=IntervalSchedule)
+signals.post_delete.connect(
+    PeriodicTasks.update_changed, sender=CrontabSchedule)
+signals.post_save.connect(
+    PeriodicTasks.update_changed, sender=CrontabSchedule)
+signals.post_delete.connect(
+    PeriodicTasks.update_changed, sender=SolarSchedule)
+signals.post_save.connect(
+    PeriodicTasks.update_changed, sender=SolarSchedule)
