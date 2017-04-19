@@ -81,7 +81,7 @@ def sync_by_tag(app_id, tag, is_show, api):
             elif i == 0:
                 subscription.last_synced_post[str(tag.name)] = feed_post['id']
                 subscription.save()
-            elif feed_post['type'] == 'photo' and feed_post.get('message') != None and hashtag in feed_post.get('message').lower():
+            elif feed_post['type'] == 'photo' and feed_post.get('message') != None and hashtag in feed_post.get('message').lower().split():
                 save_post(app_id, feed_post, is_show, tag)
 
 def api_facebook(app_id):
